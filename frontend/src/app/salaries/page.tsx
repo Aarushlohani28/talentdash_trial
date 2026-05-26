@@ -53,56 +53,66 @@ export default async function SalariesPage({ searchParams }: PageProps) {
   const { data: salaries, meta } = await getSalaries(resolvedParams);
 
   return (
-    <main className="min-h-screen p-8 bg-gradient-to-br from-slate-50 to-indigo-50/30 text-slate-900">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <header className="flex justify-between items-end">
-          <div className="space-y-3">
-            <Link href="/" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors font-medium">
-              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back home
-            </Link>
-            <h1 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-violet-600">
-              Compensation Intelligence
-            </h1>
-            <p className="text-slate-500 text-lg">
-              Showing {salaries.length} of {meta.total} records
-            </p>
-          </div>
-          <div className="flex gap-3 items-center">
-            <Link
-              href="/compare"
-              className="inline-flex items-center justify-center bg-white text-indigo-700 hover:text-indigo-800 border border-slate-200 hover:border-indigo-300 font-semibold text-sm px-5 py-2.5 rounded-xl shadow-sm transition-all hover:scale-105"
-            >
-              Compare TC
-            </Link>
-            <SalaryIngestSection />
-          </div>
-        </header>
-
-        <section className="space-y-6">
-          <SalaryFilters />
-          <SalaryTable salaries={salaries} />
-
-          {meta.totalPages > 1 && (
-            <div className="flex justify-center gap-3 mt-8 flex-wrap">
-              {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((p) => (
-                <Link
-                  key={p}
-                  href={`?page=${p}${typeof resolvedParams.level === "string" ? `&level=${resolvedParams.level}` : ""}`}
-                  className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
-                    p === meta.page
-                      ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
-                      : "bg-white text-slate-700 border-slate-200 hover:border-indigo-400"
-                  }`}
-                >
-                  {p}
-                </Link>
-              ))}
+    <main className="min-h-screen bg-white page-wrapper">
+      {/* Page header */}
+      <div className="border-b border-[#DDDDDD] bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold text-[#222222] tracking-tight">
+                Compensation Intelligence
+              </h1>
+              <p className="text-[#717171] mt-1.5">
+                Showing{" "}
+                <span className="font-semibold text-[#222222]">{salaries.length}</span>{" "}
+                of{" "}
+                <span className="font-semibold text-[#222222]">{meta.total.toLocaleString()}</span>{" "}
+                records
+              </p>
             </div>
-          )}
-        </section>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/compare"
+                id="compare-tc-btn"
+                className="inline-flex items-center gap-2 bg-white hover:bg-[#F7F7F7] text-[#222222] font-semibold text-sm px-5 py-2.5 rounded-full border-2 border-[#DDDDDD] hover:border-[#222222] transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+                Compare TC
+              </Link>
+              <SalaryIngestSection />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+        {/* Filters */}
+        <SalaryFilters />
+
+        {/* Table */}
+        <SalaryTable salaries={salaries} />
+
+        {/* Pagination */}
+        {meta.totalPages > 1 && (
+          <nav className="flex justify-center items-center gap-2 mt-8 flex-wrap" aria-label="Pagination">
+            {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((p) => (
+              <Link
+                key={p}
+                href={`?page=${p}${typeof resolvedParams.level === "string" ? `&level=${resolvedParams.level}` : ""}`}
+                aria-current={p === meta.page ? "page" : undefined}
+                className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-semibold transition-all ${
+                  p === meta.page
+                    ? "bg-[#222222] text-white"
+                    : "bg-white text-[#717171] border border-[#DDDDDD] hover:border-[#222222] hover:text-[#222222]"
+                }`}
+              >
+                {p}
+              </Link>
+            ))}
+          </nav>
+        )}
       </div>
     </main>
   );

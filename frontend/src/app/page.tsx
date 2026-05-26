@@ -3,77 +3,207 @@ import prisma from "@/lib/db";
 
 export default async function Home() {
   const count = await prisma.salary.count();
-  
+
   // Get distinct companies
   const distinctCompanies = await prisma.salary.findMany({
     select: { company: true, normalized_company: true },
-    distinct: ['normalized_company'],
+    distinct: ["normalized_company"],
     take: 12,
   });
 
+  const stats = await prisma.salary.aggregate({
+    _avg: { total_compensation: true },
+    _max: { total_compensation: true },
+  });
+
+  const avgTc = stats._avg.total_compensation ?? 0;
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 text-white overflow-hidden relative">
-      {/* Decorative background blurs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[120px] pointer-events-none" />
-      
-      <div className="max-w-6xl mx-auto px-6 py-24 relative z-10">
-        <div className="flex flex-col items-center text-center space-y-8 mb-24">
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-sm font-medium text-indigo-200 mb-4">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
-            Database Live & Connected
-          </div>
-          
-          <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-tight">
-            Discover Real <br className="hidden md:block"/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">
-              Compensation
-            </span>
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-slate-300 max-w-2xl font-light">
-            Empowering tech workers with transparent, verified salary data. Based on {count} community submissions.
-          </p>
-          
-          <div className="pt-8 flex flex-wrap gap-4 justify-center">
-            <Link 
-              href="/salaries" 
-              className="inline-flex items-center justify-center bg-white text-indigo-900 font-bold text-lg px-8 py-4 rounded-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] transition-all hover:scale-105 active:scale-95"
-            >
-              Explore All Salaries
-              <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </Link>
-            <Link 
-              href="/compare" 
-              className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-lg px-8 py-4 rounded-xl transition-all hover:scale-105 active:scale-95"
-            >
-              Compare Salaries
-              <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-            </Link>
-          </div>
+    <main className="page-wrapper">
+      {/* Hero Section */}
+      <section className="relative bg-white overflow-hidden">
+        {/* Subtle background decoration */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#FF385C]/8 to-[#FF5A5F]/4 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 w-[400px] h-[400px] rounded-full bg-gradient-to-tr from-[#FF385C]/6 to-transparent blur-3xl" />
         </div>
 
-        <div className="space-y-6">
-          <h3 className="text-center text-sm font-semibold tracking-widest text-slate-400 uppercase">
-            Browse by Top Companies
-          </h3>
-          <div className="flex flex-wrap justify-center gap-4">
-            {distinctCompanies.map((c) => (
+        <div className="max-w-7xl mx-auto px-6 pt-20 pb-24 relative">
+          <div className="max-w-4xl">
+            {/* Live badge */}
+            <div className="inline-flex items-center gap-2 bg-[#FFF0F3] border border-[#FFD0D9] text-[#C60845] text-sm font-medium px-4 py-1.5 rounded-full mb-8">
+              <span className="w-2 h-2 rounded-full bg-[#FF385C] animate-pulse" />
+              {count.toLocaleString()} verified salary records
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-extrabold text-[#222222] leading-[1.1] tracking-tight mb-6">
+              Know your worth.{" "}
+              <span className="gradient-text">
+                Get paid fairly.
+              </span>
+            </h1>
+
+            <p className="text-xl text-[#717171] max-w-2xl leading-relaxed mb-10 font-normal">
+              Browse real, community-submitted compensation data from top tech companies. 
+              Transparent salary insights to help you negotiate with confidence.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
               <Link
-                key={c.normalized_company}
-                href={`/companies/${c.normalized_company}`}
-                className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 backdrop-blur-sm transition-all font-medium text-slate-200 hover:text-white"
+                href="/salaries"
+                id="hero-explore-btn"
+                className="inline-flex items-center gap-2 bg-[#FF385C] hover:bg-[#E31C5F] text-white font-semibold text-base px-8 py-4 rounded-full transition-all shadow-lg shadow-[#FF385C]/30 hover:shadow-xl hover:shadow-[#FF385C]/40 hover:-translate-y-0.5"
               >
-                {c.company}
+                Explore All Salaries
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
               </Link>
+              <Link
+                href="/compare"
+                id="hero-compare-btn"
+                className="inline-flex items-center gap-2 bg-white hover:bg-[#F7F7F7] text-[#222222] font-semibold text-base px-8 py-4 rounded-full border-2 border-[#DDDDDD] hover:border-[#222222] transition-all"
+              >
+                Compare TC
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats bar */}
+      <section className="border-y border-[#DDDDDD] bg-[#F7F7F7]">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex flex-wrap gap-8 md:gap-16 items-center justify-center md:justify-start">
+            {[
+              { label: "Salary Records", value: count.toLocaleString() },
+              { label: "Companies", value: `${distinctCompanies.length}+` },
+              { label: "Avg Total Comp", value: `$${(avgTc / 1000).toFixed(0)}k` },
+              { label: "Community Driven", value: "100%" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center md:text-left">
+                <p className="text-2xl font-bold text-[#222222]">{stat.value}</p>
+                <p className="text-sm text-[#717171] mt-0.5">{stat.label}</p>
+              </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Company Grid Section */}
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-[#222222]">Browse by company</h2>
+            <p className="text-[#717171] mt-1">Explore verified compensation data from top employers</p>
+          </div>
+          <Link
+            href="/salaries"
+            className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold text-[#222222] underline underline-offset-2 hover:text-[#FF385C] transition-colors"
+          >
+            View all
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {distinctCompanies.map((c, i) => (
+            <Link
+              key={c.normalized_company}
+              href={`/companies/${c.normalized_company}`}
+              className="airbnb-card group p-5 flex flex-col gap-3"
+              style={{ animationDelay: `${i * 50}ms` }}
+              id={`company-card-${c.normalized_company}`}
+            >
+              {/* Company avatar */}
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF385C]/10 to-[#FF5A5F]/5 flex items-center justify-center border border-[#FF385C]/10">
+                <span className="text-lg font-bold text-[#FF385C]">
+                  {c.company.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <p className="font-semibold text-[#222222] group-hover:text-[#FF385C] transition-colors text-sm leading-tight">
+                  {c.company}
+                </p>
+                <p className="text-xs text-[#717171] mt-0.5">View salaries →</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="bg-[#F7F7F7] border-t border-[#DDDDDD]">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold text-[#222222]">How TalentDash works</h2>
+            <p className="text-[#717171] mt-3 text-lg">Transparent data, real insights</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: (
+                  <svg className="w-7 h-7 text-[#FF385C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                ),
+                title: "Browse & Filter",
+                desc: "Search salaries by company, role, level, and location across hundreds of verified records.",
+              },
+              {
+                icon: (
+                  <svg className="w-7 h-7 text-[#FF385C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                ),
+                title: "Compare Offers",
+                desc: "Side-by-side compensation breakdowns — base, bonus, stock, and total comp in one view.",
+              },
+              {
+                icon: (
+                  <svg className="w-7 h-7 text-[#FF385C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ),
+                title: "Contribute",
+                desc: "Add your own salary data anonymously to help the community make better decisions.",
+              },
+            ].map((item) => (
+              <div key={item.title} className="airbnb-card p-8">
+                <div className="w-14 h-14 rounded-2xl bg-[#FFF0F3] flex items-center justify-center mb-5">
+                  {item.icon}
+                </div>
+                <h3 className="text-lg font-bold text-[#222222] mb-2">{item.title}</h3>
+                <p className="text-[#717171] leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="bg-gradient-to-r from-[#FF385C] to-[#BD1E59] rounded-3xl p-12 text-center text-white">
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Ready to know your worth?</h2>
+          <p className="text-white/80 text-lg mb-8 max-w-xl mx-auto">
+            Join thousands of tech workers who use TalentDash to negotiate better offers.
+          </p>
+          <Link
+            href="/salaries"
+            className="inline-flex items-center gap-2 bg-white text-[#FF385C] font-bold text-base px-8 py-4 rounded-full hover:bg-[#F7F7F7] transition-all shadow-lg hover:-translate-y-0.5"
+          >
+            Get Started Free
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
