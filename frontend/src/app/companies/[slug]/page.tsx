@@ -17,20 +17,34 @@ interface PageProps {
 }
 
 async function getCompanyData(slug: string) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/api/companies/${slug}`,
-    { next: { revalidate: 300 } }
+  const salaries = await prisma.salary.findMany({
+    where: { normalized_company: slug },
+    orderBy: { created_at: "desc" },
+  });
+
+  if (salaries.length === 0) return null;
+
+  const sorted = salaries.map((s) => s.total_compensation).sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const medianTc =
+    sorted.length % 2 !== 0 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+
+  const levelDistribution = salaries.reduce(
+    (acc, curr) => {
+      acc[curr.level_standardized] = (acc[curr.level_standardized] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
   );
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error("Failed to fetch company data");
-  return res.json() as Promise<{
-    company: string;
-    normalized_company: string;
-    totalRecords: number;
-    medianTc: number;
-    levelDistribution: Record<string, number>;
-    salaries: any[];
-  }>;
+
+  return {
+    company: salaries[0].company,
+    normalized_company: slug,
+    totalRecords: salaries.length,
+    medianTc,
+    levelDistribution,
+    salaries,
+  };
 }
 
 export default async function CompanyPage({ params }: PageProps) {
