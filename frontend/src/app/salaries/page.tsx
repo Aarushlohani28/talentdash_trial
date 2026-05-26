@@ -70,7 +70,15 @@ export default async function SalariesPage({ searchParams }: PageProps) {
               Showing {salaries.length} of {meta.total} records
             </p>
           </div>
-          <SalaryIngestSection />
+          <div className="flex gap-3 items-center">
+            <Link
+              href="/compare"
+              className="inline-flex items-center justify-center bg-white text-indigo-700 hover:text-indigo-800 border border-slate-200 hover:border-indigo-300 font-semibold text-sm px-5 py-2.5 rounded-xl shadow-sm transition-all hover:scale-105"
+            >
+              Compare TC
+            </Link>
+            <SalaryIngestSection />
+          </div>
         </header>
 
         <section className="space-y-6">

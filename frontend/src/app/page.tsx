@@ -35,7 +35,7 @@ export default async function Home() {
             Empowering tech workers with transparent, verified salary data. Based on {count} community submissions.
           </p>
           
-          <div className="pt-8">
+          <div className="pt-8 flex flex-wrap gap-4 justify-center">
             <Link 
               href="/salaries" 
               className="inline-flex items-center justify-center bg-white text-indigo-900 font-bold text-lg px-8 py-4 rounded-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] transition-all hover:scale-105 active:scale-95"
@@ -43,6 +43,15 @@ export default async function Home() {
               Explore All Salaries
               <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </Link>
+            <Link 
+              href="/compare" 
+              className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-lg px-8 py-4 rounded-xl transition-all hover:scale-105 active:scale-95"
+            >
+              Compare Salaries
+              <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
             </Link>
           </div>
