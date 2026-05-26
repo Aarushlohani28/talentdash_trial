@@ -8,28 +8,44 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+import prisma from "@/lib/db";
+
 async function getSalaries(searchParams: Record<string, string | string[] | undefined>) {
   const levelParam = typeof searchParams.level === "string" ? searchParams.level : "";
   const locationParam = typeof searchParams.location === "string" ? searchParams.location : "";
   const roleParam = typeof searchParams.role === "string" ? searchParams.role : "";
   const pageParam = typeof searchParams.page === "string" ? searchParams.page : "1";
 
-  const url = new URL(
-    "/api/salaries",
-    process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"
-  );
-  if (levelParam && Object.values(Level).includes(levelParam as Level)) url.searchParams.set("level", levelParam);
-  if (locationParam) url.searchParams.set("location", locationParam);
-  if (roleParam) url.searchParams.set("role", roleParam);
-  url.searchParams.set("page", pageParam);
-  url.searchParams.set("limit", "20");
+  const page = Math.max(1, parseInt(pageParam, 10));
+  const limit = 20;
 
-  const res = await fetch(url.toString(), { next: { revalidate: 60 } });
-  if (!res.ok) throw new Error("Failed to fetch salaries");
-  return res.json() as Promise<{
-    data: any[];
-    meta: { total: number; page: number; limit: number; totalPages: number };
-  }>;
+  const where: any = {};
+  if (levelParam && Object.values(Level).includes(levelParam as Level)) {
+    where.level_standardized = levelParam as Level;
+  }
+  if (locationParam) {
+    where.location = { contains: locationParam, mode: "insensitive" };
+  }
+  if (roleParam) {
+    where.role = { contains: roleParam, mode: "insensitive" };
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [data, total] = await Promise.all([
+    prisma.salary.findMany({
+      where,
+      orderBy: { created_at: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.salary.count({ where }),
+  ]);
+
+  return {
+    data,
+    meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+  };
 }
 
 export default async function SalariesPage({ searchParams }: PageProps) {
