@@ -2,6 +2,9 @@
 
 A production-grade, statically-optimized compensation intelligence platform built on Next.js 15, Prisma 7, and Neon PostgreSQL.
 
+**Live Application:** [Insert Vercel URL here]
+**GitHub Repository:** [https://github.com/Aarushlohani28/talentdash_trial](https://github.com/Aarushlohani28/talentdash_trial)
+
 ---
 
 ## Tech Stack
@@ -23,7 +26,8 @@ A production-grade, statically-optimized compensation intelligence platform buil
 
 ```bash
 git clone <your-repo-url>
-cd talentdash-trial
+cd talentdash_trial
+cd frontend
 npm install
 ```
 
