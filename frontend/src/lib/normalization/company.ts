@@ -26,5 +26,21 @@ export function normalizeCompanyName(name: string): string {
   normalized = normalized.replace(/[^a-z0-9\s]/g, '');
   normalized = normalized.replace(/\s+/g, ' ');
 
+  // Specific alias mappings
+  const aliases: Record<string, string> = {
+    'tata consultancy services': 'tcs',
+    'tata consultancy': 'tcs',
+    'amazon web services': 'aws',
+    'amazoncom': 'amazon',
+    'google llc': 'google',
+    'meta platforms': 'meta',
+    'facebook': 'meta',
+    'alphabet': 'google'
+  };
+
+  if (aliases[normalized]) {
+    normalized = aliases[normalized];
+  }
+
   return normalized;
 }
