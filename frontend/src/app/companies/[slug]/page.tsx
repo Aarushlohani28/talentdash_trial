@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { SalaryTable } from "@/components/salaries/SalaryTable";
 import prisma from "@/lib/db";
 
@@ -47,16 +48,47 @@ async function getCompanyData(slug: string) {
   };
 }
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const company = slug.charAt(0).toUpperCase() + slug.slice(1);
+  return {
+    title: `${company} Salaries & Compensation | TalentDash`,
+    description: `Browse verified compensation data for ${company}. See base salary, bonus, stock, and total compensation broken down by level and role.`,
+  };
+}
+
 export default async function CompanyPage({ params }: PageProps) {
   const { slug } = await params;
   const data = await getCompanyData(slug.toLowerCase());
 
   if (!data) notFound();
 
-  const { company, totalRecords, medianTc, levelDistribution, salaries } = data;
+  const { company, normalized_company, totalRecords, medianTc, levelDistribution, salaries } = data;
+
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    name: `${company} Compensation Data`,
+    description: `Verified salary and compensation records for ${company}, including base salary, bonus, stock, and total compensation by level.`,
+    url: `https://talentdash.vercel.app/companies/${normalized_company}`,
+    keywords: [company, "salary", "compensation", "tech salary", "total compensation"],
+    creator: {
+      "@type": "Organization",
+      name: "TalentDash",
+    },
+    variableMeasured: [
+      { "@type": "PropertyValue", name: "Median Total Compensation", value: medianTc },
+      { "@type": "PropertyValue", name: "Number of Records", value: totalRecords },
+    ],
+  };
 
   return (
     <main className="min-h-screen p-8 bg-gradient-to-br from-slate-50 to-violet-50/40 text-slate-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="max-w-6xl mx-auto space-y-8">
         <header className="space-y-6">
           <Link href="/" className="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors font-medium">

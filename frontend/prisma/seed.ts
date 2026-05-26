@@ -7,7 +7,8 @@ const roles = ['Software Engineer', 'Backend Engineer', 'Frontend Engineer', 'Da
 
 const levels = [
   Level.L3, Level.L4, Level.L5, Level.L6,
-  Level.L7, Level.L8
+  Level.Staff, Level.Principal,
+  Level.SDE_I, Level.SDE_II, Level.SDE_III
 ]
 
 function getRandomInt(min: number, max: number) {
@@ -41,10 +42,10 @@ function generateSalaryRecord() {
   } else if (level_standardized === 'L6') {
     experience_years = getRandomInt(8, 12);
     baseMultiplier = 3.0;
-  } else if (level_standardized === 'L7') {
+  } else if (level_standardized === 'Staff' || level_standardized === 'SDE_III') {
     experience_years = getRandomInt(12, 16);
     baseMultiplier = 4.0;
-  } else if (level_standardized === 'L8') {
+  } else if (level_standardized === 'Principal') {
     experience_years = getRandomInt(16, 20);
     baseMultiplier = 5.0;
   }

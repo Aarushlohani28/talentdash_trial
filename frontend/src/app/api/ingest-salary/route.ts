@@ -2,40 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db";
 import { normalizeCompanyName } from "@/lib/normalization/company";
-import { computeConfidenceScore } from "@/lib/analytics/confidence";
 import { Level } from "@prisma/client";
 
 // Ensure this route is always dynamically handled (never cached)
 export const dynamic = "force-dynamic";
 
+const levelMap: Record<string, Level> = {
+  "L3": Level.L3,
+  "L4": Level.L4,
+  "L5": Level.L5,
+  "L6": Level.L6,
+  "SDE-I": Level.SDE_I,
+  "SDE-II": Level.SDE_II,
+  "SDE-III": Level.SDE_III,
+  "Staff": Level.Staff,
+  "Principal": Level.Principal,
+};
+
 const IngestSalarySchema = z.object({
-  company: z.string().min(1, "Company name is required"),
+  company: z.string().min(1, "Company name is required").transform(s => s.toLowerCase().trim()),
   role: z.string().min(1, "Role is required"),
-  level: z.string().min(1, "Level is required"),
+  level_standardized: z.enum(["L3", "L4", "L5", "L6", "SDE-I", "SDE-II", "SDE-III", "Staff", "Principal"] as const, {
+    message: "Invalid level_standardized",
+  }).transform(val => levelMap[val]),
   location: z.string().min(1, "Location is required"),
-  experience_years: z.number().min(0, "Experience cannot be negative"),
-  base_salary: z.number().min(0, "Base salary must be positive"),
+  experience_years: z.number().int("Must be integer").min(0, "Experience cannot be negative").max(50, "Experience max 50"),
+  base_salary: z.number().positive("Base salary must be positive"),
   bonus: z.number().min(0).optional().default(0),
   stock: z.number().min(0).optional().default(0),
+  confidence_score: z.number().min(0.0).max(1.0, "Confidence score must be between 0.0 and 1.0"),
 });
-
-// A simple mapper to map raw inputs to our L3-L8 standard
-function mapToStandardLevel(rawLevel: string): Level | null {
-  const normalized = rawLevel.toUpperCase().trim().replace(/\s+/g, "_");
-  if (Object.values(Level).includes(normalized as Level)) {
-    return normalized as Level;
-  }
-  
-  // Basic heuristic mapping for common titles
-  if (normalized.includes("JUNIOR") || normalized === "SDE_I" || normalized === "L3") return Level.L3;
-  if (normalized === "SDE_II" || normalized === "MID" || normalized === "L4") return Level.L4;
-  if (normalized === "SENIOR" || normalized === "SDE_III" || normalized === "L5") return Level.L5;
-  if (normalized.includes("STAFF") || normalized === "L6") return Level.L6;
-  if (normalized.includes("SENIOR_STAFF") || normalized === "L7") return Level.L7;
-  if (normalized.includes("PRINCIPAL") || normalized === "L8") return Level.L8;
-
-  return null;
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,18 +45,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { company, role, level, location, experience_years, base_salary, bonus, stock } = parsed.data;
-
-    const level_standardized = mapToStandardLevel(level);
-    if (!level_standardized) {
-      return NextResponse.json(
-        { error: `Could not map level '${level}' to standard bands (L3-L8)` },
-        { status: 400 }
-      );
-    }
+    const { company, role, level_standardized, location, experience_years, base_salary, bonus, stock, confidence_score } = parsed.data;
 
     const total_compensation = base_salary + bonus + stock;
-    const confidence_score = computeConfidenceScore({ base_salary, bonus, stock });
     const normalized_company = normalizeCompanyName(company);
 
     const salary = await prisma.salary.create({

@@ -11,8 +11,11 @@ enum Level {
   L4
   L5
   L6
-  L7
-  L8
+  SDE_I @map("SDE-I")
+  SDE_II @map("SDE-II")
+  SDE_III @map("SDE-III")
+  Staff
+  Principal
 }
 
 model Salary {
